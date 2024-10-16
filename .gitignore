@@ -6,3 +6,4 @@ venv
 *.json
 *.txt
 !queries.txt
+!requirements.txt
