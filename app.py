@@ -48,15 +48,13 @@ class MoonRabbits:
                 async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                     response.raise_for_status()
                     generate_token = await response.json()
-                    return {
-                        'cookie': response.headers['Set-Cookie'].split(';')[0],
-                        'username': generate_token['username']
-                    }
-        except ClientResponseError as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Accounts Sync: {str(e)} ]{Style.RESET_ALL}")
-            return None
-        except Exception as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Accounts Sync: {str(e)} ]{Style.RESET_ALL}")
+                    return {'cookie': response.headers['Set-Cookie'].split(';')[0], 'username': generate_token['username']}
+        except (Exception, ClientResponseError) as e:
+            self.print_timestamp(
+                f"{Fore.YELLOW + Style.BRIGHT}[ Failed To Process {query} ]{Style.RESET_ALL}"
+                f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
+                f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}"
+            )
             return None
 
     async def generate_tokens(self, queries):
