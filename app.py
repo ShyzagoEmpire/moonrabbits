@@ -189,7 +189,7 @@ if __name__ == '__main__':
         moonrabbits.print_timestamp(
             f"{Fore.GREEN + Style.BRIGHT}[ 1 ]{Style.RESET_ALL}"
             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            f"{Fore.BLUE + Style.BRIGHT}[ Generate Token ]{Style.RESET_ALL}"
+            f"{Fore.BLUE + Style.BRIGHT}[ Generate Tokens ]{Style.RESET_ALL}"
         )
         moonrabbits.print_timestamp(
             f"{Fore.GREEN + Style.BRIGHT}[ 2 ]{Style.RESET_ALL}"
