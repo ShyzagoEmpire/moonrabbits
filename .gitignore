@@ -4,6 +4,5 @@ development
 venv
 .DS_Store
 *.json
-*.txt
 !queries.txt
 !requirements.txt

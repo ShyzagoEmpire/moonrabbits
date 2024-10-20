@@ -35,6 +35,7 @@ class MoonRabbits:
             f"{message}",
             flush=True
         )
+
     async def generate_token(self, query: str):
         url = 'https://moonrabbits-api.backersby.com/v1/accounts/sync'
         data = json.dumps({'telegram_data':query,'invited_by':'6094625904'})
@@ -71,8 +72,7 @@ class MoonRabbits:
             cookie = result['cookie']
             existing_accounts[username] = cookie
 
-        with open('accounts.json', 'w') as file:
-            json.dump([{'username': k, 'cookie': v} for k, v in existing_accounts.items()], file, indent=4)
+        json.dump([{'username': k, 'cookie': v} for k, v in existing_accounts.items()], open('accounts.json', 'w'), indent=4)
 
     async def load_from_json(self):
         try:
@@ -176,15 +176,16 @@ class MoonRabbits:
                 self.clear_terminal()
             except Exception as e:
                 self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}")
-                pass
+                continue
 
 if __name__ == '__main__':
     try:
-        if sys.platform == 'win32':
+        if hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
         init(autoreset=True)
         moonrabbits = MoonRabbits()
+
         moonrabbits.print_timestamp(
             f"{Fore.GREEN + Style.BRIGHT}[ 1 ]{Style.RESET_ALL}"
             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
@@ -197,22 +198,20 @@ if __name__ == '__main__':
         )
 
         initial_choice = int(input(
-            f"{Fore.YELLOW + Style.BRIGHT}[ Enter The Number Corresponding To Your Choice ]{Style.RESET_ALL}"
+            f"{Fore.BLUE + Style.BRIGHT}[ {datetime.now().astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}"
+            f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
+            f"{Fore.YELLOW + Style.BRIGHT}[ Select Option ]{Style.RESET_ALL}"
             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
         ))
-
         if initial_choice == 1:
             queries = [line.strip() for line in open('queries.txt') if line.strip()]
             if not queries:
                 raise FileNotFoundError("Fill Your Query In 'queries.txt'")
 
             accounts = asyncio.run(moonrabbits.generate_tokens(queries=queries))
-
+            accounts = asyncio.run(moonrabbits.load_from_json())
             open('queries.txt', 'w').close()
 
-            moonrabbits.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ Token Generation Completed ]{Style.RESET_ALL}")
-
-            accounts = asyncio.run(moonrabbits.load_from_json())
             if not accounts:
                 raise FileNotFoundError("No accounts found in accounts.json. Please generate tokens first by selecting Option 1.")
         elif initial_choice == 2:
