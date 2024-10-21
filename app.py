@@ -114,9 +114,9 @@ class MoonRabbits:
                         for task in tasks:
                             await self.my_tasks_complete(cookie=cookie, task_id=task['id'], task_name=task['name'])
         except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching My MRB: {str(e)} ]{Style.RESET_ALL}")
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching My Tasks: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching My MRB: {str(e)} ]{Style.RESET_ALL}")
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching My Tasks: {str(e)} ]{Style.RESET_ALL}")
 
     async def my_tasks_complete(self, cookie: str, task_id: str, task_name: str):
         url = 'https://moonrabbits-api.backersby.com/v1/my-tasks/complete'
@@ -141,12 +141,16 @@ class MoonRabbits:
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Already Completed {task_name} Daily Task Today ]{Style.RESET_ALL}")
                         elif error_my_tasks_complete['message'] == f'Invalid Task: {task_id}':
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Invalid Task ID: {task_id} ]{Style.RESET_ALL}")
+                        elif error_my_tasks_complete['message'] == 'Task is not completed yet 🐰\nPlease complete and retry!':
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task_name} Isn\'t Completed Yet. Please Complete And Retry! ]{Style.RESET_ALL}")
+                        elif error_my_tasks_complete['message'] == 'Task not found!':
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task_name} Not Found! ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ {task_name} Completed ]{Style.RESET_ALL}")
         except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching My MRB: {str(e)} ]{Style.RESET_ALL}")
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While My Tasks Complete: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching My MRB: {str(e)} ]{Style.RESET_ALL}")
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While My Tasks Complete: {str(e)} ]{Style.RESET_ALL}")
 
     async def main(self, accounts):
         while True:
