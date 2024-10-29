@@ -6,6 +6,7 @@ from aiohttp import (
 from colorama import *
 from datetime import datetime, timedelta
 from fake_useragent import FakeUserAgent
+from random import randint
 import asyncio, json, os, sys
 
 class MoonRabbits:
@@ -108,6 +109,7 @@ class MoonRabbits:
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.get(url=url, headers=headers, ssl=False) as response:
+                    await asyncio.sleep(randint(3, 5))
                     response.raise_for_status()
                     my_tasks = await response.json()
                     for category, tasks in my_tasks.items():
