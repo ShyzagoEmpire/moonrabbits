@@ -50,11 +50,11 @@ class MoonRabbits:
                     response.raise_for_status()
                     generate_token = await response.json()
                     return {'cookie': response.headers['Set-Cookie'].split(';')[0], 'username': generate_token['username']}
-        except (Exception, ClientResponseError) as e:
+        except (Exception, ClientResponseError) as error:
             self.print_timestamp(
                 f"{Fore.YELLOW + Style.BRIGHT}[ Failed To Process {query} ]{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}"
+                f"{Fore.RED + Style.BRIGHT}[ {str(error)} ]{Style.RESET_ALL}"
             )
             return None
 
@@ -77,8 +77,8 @@ class MoonRabbits:
     async def load_from_json(self):
         try:
             return [(account['cookie'], account['username']) for account in json.load(open('accounts.json', 'r'))]
-        except Exception as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Error Occurred While Loading JSON: {str(e)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Error Occurred While Loading JSON: {str(error)} ]{Style.RESET_ALL}")
             return []
 
     async def my_mrb(self, cookie: str):
@@ -92,11 +92,11 @@ class MoonRabbits:
                 async with session.get(url=url, headers=headers, ssl=False) as response:
                     response.raise_for_status()
                     return await response.json()
-        except ClientResponseError as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching My MRB: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching My MRB: {str(error)} ]{Style.RESET_ALL}")
             return None
-        except Exception as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching My MRB: {str(e)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching My MRB: {str(error)} ]{Style.RESET_ALL}")
             return None
 
     async def my_tasks(self, cookie: str):
@@ -113,10 +113,10 @@ class MoonRabbits:
                     for category, tasks in my_tasks.items():
                         for task in tasks:
                             await self.my_tasks_complete(cookie=cookie, task_id=task['id'], task_name=task['name'])
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching My Tasks: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching My Tasks: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching My Tasks: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching My Tasks: {str(error)} ]{Style.RESET_ALL}")
 
     async def my_tasks_complete(self, cookie: str, task_id: str, task_name: str):
         url = 'https://moonrabbits-api.backersby.com/v1/my-tasks/complete'
@@ -147,10 +147,34 @@ class MoonRabbits:
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task_name} Not Found! ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ {task_name} Completed ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While My Tasks Complete: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While My Tasks Complete: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While My Tasks Complete: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While My Tasks Complete: {str(error)} ]{Style.RESET_ALL}")
+
+    async def games_play(self, cookie: str):
+        url = 'https://moonrabbits-api.backersby.com/v1/games/play'
+        data = json.dumps({'game_type':'FORTUNE_COOKIE'})
+        headers = {
+            **self.headers,
+            'Content-Length': str(len(data)),
+            'Content-Type': 'application/json',
+            'Cookie': cookie
+        }
+        try:
+            async with ClientSession(timeout=ClientTimeout(total=10)) as session:
+                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                    if response.status == 400:
+                        error_games_play = await response.json()
+                        if error_games_play['message'] == 'No carrots remaining to play the game.':
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ No Carrots Remaining To Play The Game ]{Style.RESET_ALL}")
+                    response.raise_for_status()
+                    games_play = await response.json()
+                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {games_play['reward']} From Fortune Cookie ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While My Tasks Complete: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While My Tasks Complete: {str(error)} ]{Style.RESET_ALL}")
 
     async def main(self, accounts):
         while True:
@@ -164,6 +188,14 @@ class MoonRabbits:
                         f"{Fore.CYAN + Style.BRIGHT}[ {username} ]{Style.RESET_ALL}"
                     )
                     await self.my_tasks(cookie=cookie)
+
+                for (cookie, username) in accounts:
+                    self.print_timestamp(
+                        f"{Fore.WHITE + Style.BRIGHT}[ Mini-games ]{Style.RESET_ALL}"
+                        f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
+                        f"{Fore.CYAN + Style.BRIGHT}[ {username} ]{Style.RESET_ALL}"
+                    )
+                    await self.games_play(cookie=cookie)
     
                 for (cookie, username) in accounts:
                     my_mrb = await self.my_mrb(cookie=cookie)
@@ -178,8 +210,8 @@ class MoonRabbits:
 
                 await asyncio.sleep(3600)
                 self.clear_terminal()
-            except Exception as e:
-                self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}")
+            except Exception as error:
+                self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(error)} ]{Style.RESET_ALL}")
                 continue
 
 if __name__ == '__main__':
@@ -226,7 +258,7 @@ if __name__ == '__main__':
             raise ValueError("Invalid Initial Choice. Please Run The Script Again And Choose A Valid Option")
 
         asyncio.run(moonrabbits.main(accounts))
-    except (ValueError, IndexError, FileNotFoundError) as e:
-        moonrabbits.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}")
+    except (ValueError, IndexError, FileNotFoundError) as error:
+        moonrabbits.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(error)} ]{Style.RESET_ALL}")
     except KeyboardInterrupt:
         sys.exit(0)
