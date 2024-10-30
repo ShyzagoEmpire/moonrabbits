@@ -163,21 +163,23 @@ class MoonRabbits:
             'Content-Type': 'application/json',
             'Cookie': cookie
         }
-        while True:
-            try:
-                async with ClientSession(timeout=ClientTimeout(total=10)) as session:
-                    async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                        response.raise_for_status()
-                        games_play = await response.json()
-                        self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {games_play['reward']} From Fortune Cookie ]{Style.RESET_ALL}")
-            except ClientResponseError as error:
-                if error.status == 400:
-                    error_games_play = await response.json()
-                    if error_games_play['message'] == 'No carrots remaining to play the game.':
-                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ No Carrots Remaining To Play The Game ]{Style.RESET_ALL}")
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Games Play: {str(error)} ]{Style.RESET_ALL}")
-            except Exception as error:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Games Play: {str(error)} ]{Style.RESET_ALL}")
+        # while True:
+        try:
+            async with ClientSession(timeout=ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
+                    if response.status == 400:
+                        error_games_play = await response.json()
+                        if error_games_play['message'] == 'No carrots remaining to play the game.':
+                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ No Carrots Remaining To Play The Game ]{Style.RESET_ALL}")
+                        elif error_games_play['message'] == 'Invalid access':
+                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Invalid Access While Games Play ]{Style.RESET_ALL}")
+                    response.raise_for_status()
+                    games_play = await response.json()
+                    self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {games_play['reward']} From Fortune Cookie ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Games Play: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Games Play: {str(error)} ]{Style.RESET_ALL}")
 
     async def main(self, accounts):
         while True:
